@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaris Pisti Arac Takibi</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <h2>🏁 Yaris Pisti Arac Takibi</h2>
+    <div id="map" style="height: 500px;"></div>
+
+    <script>
+        // 🌍 Haritayı başlat
+        var map = L.map("map").setView([40.787436, 29.451071], 15);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+        // 🏎 Yarış pisti koordinatları
+        const trackCoordinates = [
+            [40.787436, 29.451071], [40.787434, 29.451315], [40.787355, 29.451512],
+            [40.787256, 29.451922], [40.787143, 29.452188], [40.786857, 29.452356],
+            [40.786741, 29.452439], [40.786635, 29.452624], [40.786427, 29.452713],
+            [40.786055, 29.452777], [40.785964, 29.452873], [40.785872, 29.453364],
+            [40.785780, 29.453862], [40.786002, 29.454353], [40.786355, 29.454831],
+            [40.786818, 29.455163], [40.787065, 29.455571], [40.787171, 29.456133],
+            [40.787287, 29.457090], [40.787321, 29.457791], [40.787601, 29.457677],
+            [40.788156, 29.457338], [40.788504, 29.457128], [40.788311, 29.456260],
+            [40.788036, 29.454487], [40.787654, 29.452197], [40.787567, 29.451348]
+        ];
+
+        // 🏁 Yarış pistini çiz
+        var trackPath = L.polyline(trackCoordinates, {
+            color: "blue", weight: 5, opacity: 0.7, dashArray: "5, 10"
+        }).addTo(map);
+            
+        L.marker(trackCoordinates[0]).addTo(map).bindPopup("🏁 Yarış Başlangıcı");
+        L.marker(trackCoordinates[trackCoordinates.length - 2]).addTo(map).bindPopup("🏁 Yarış Bitişi");
+
+        // 🏎 Yarışçı işaretçisi
+        var racerMarker = L.marker(trackCoordinates[0], {
+            icon: L.icon({
+                iconUrl: "https://i.pinimg.com/736x/d9/7f/e5/d97fe502435e0bdae0900d080ab39e78.jpg",
+                iconSize: [30, 30]
+            })
+        }).addTo(map).bindPopup("🚗 Yarışçı");
+
+        // 📡 WebSocket bağlantısı
+        const ws = new WebSocket('ws://localhost:3000');
+
+        ws.onmessage = function (event) {
+            try {
+                const data = JSON.parse(event.data);
+                console.log("📌 Yeni Konum:", data);
+                if (data.lat && data.lon) {
+                    racerMarker.setLatLng([data.lat, data.lon]);
+                    map.setView([data.lat, data.lon], 15);
+                }
+            } catch (error) {
+                console.error("❌ JSON Parse Hatası:", error);
+            }
+        };
+    </script>
+</body>
+</html>
